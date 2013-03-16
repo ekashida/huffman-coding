@@ -1,0 +1,33 @@
+{
+    "name": "huffman-coding",
+    "version": "0.0.1",
+    "description": "Huffman compression and decompression",
+    "main": "index.js",
+    "repository": {
+        "type": "git",
+        "url": "http://github.com/ekashida/huffman-coding.git"
+    },
+    "keywords": [
+        "huffman",
+        "codec",
+        "coding",
+        "compression",
+        "decompression",
+        "encode",
+        "decode"
+    ],
+    "dependencies": {
+    },
+    "devDependencies": {
+        "mocha": "~1.8.1"
+    },
+    "author": {
+        "name": "Eugene Kashida",
+        "email": "ekashida@gmail.com",
+        "url": "http://eugene.me"
+    },
+    "scripts": {
+        "test": "./node_modules/.bin/mocha"
+    },
+    "license": "BSD"
+}
