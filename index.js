@@ -166,8 +166,10 @@ Convenience method used to generate a string of zeros.
 **/
 function zeros (count) {
     var output = '';
-    while (count--) {
-        output += '0';
+    if (count >= 0) {
+        while (count--) {
+            output += '0';
+        }
     }
     return output;
 }
