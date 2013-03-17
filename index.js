@@ -16,6 +16,7 @@ exports.initialize = function (o) {
     }
     else if (typeof o === 'object' && o !== null) {
         exports.tree = o;
+        encodeSymbol(o);
     }
 };
 
@@ -137,12 +138,13 @@ before decoding.
 exports.decodeHex = function (o) {
     var hex = o.hex,
         symbols = [],
-        binary, b, len, i;
+        binary = '',
+        b, len, i;
 
     for (i = 0, len = hex.length; i < len; i += 1) {
         b = parseInt(hex.substr(i, 1), 16).toString(2);
         if (b.length !== 4) {
-            b = zeros(4 - binary.length) + b;
+            b = zeros(4 - b.length) + b;
         }
         binary += b;
     }
