@@ -78,11 +78,11 @@ Encodes symbols into hex.
 Note: Since it's not clear what should be done with any left-over bits, return
 an object with `hex` and `binary` properties.
 
-@method hexEncode
+@method encodeHex
 @param symbols {Array} Symbols to encode
 @return {Object} Hex encoding and binary left-over
 **/
-exports.hexEncode = function (symbols) {
+exports.encodeHex = function (symbols) {
     var binary = encode(symbols),
         hex = '',
         chunk, len, i;
@@ -130,11 +130,11 @@ Decodes hex into symbols.
 Note: Pass any extra bits as `o.binary` that need to be appended to the binary
 before decoding.
 
-@method hexEncode
+@method decodeHex
 @param symbols {Array} Symbols to encode
 @return {Object} Hex encoding and binary left-over
 **/
-exports.hexDecode = function (o) {
+exports.decodeHex = function (o) {
     var hex = o.hex,
         symbols = [],
         binary, b, len, i;
