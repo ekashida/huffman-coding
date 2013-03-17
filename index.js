@@ -1,5 +1,6 @@
-var symbolFor = {},
-    codeFor   = {};
+var symbolFor = exports.symbolFor = {},
+    codeFor   = exports.codeFor   = {},
+    tree      = exports.tree;
 
 /**
 Initialize using either an array of symbols that should be converted into a
@@ -11,10 +12,10 @@ Huffman tree, or an existing Huffman tree with non-leaf nodes with `left`, and
 **/
 exports.initialize = function (o) {
     if (Array.isArray(o)) {
-        generate(o);
+        exports.tree = generate(o);
     }
     else if (typeof o === 'object' && o !== null) {
-        encodeSymbol(o);
+        exports.tree = o;
     }
 };
 
@@ -23,6 +24,7 @@ Generates a Huffman tree given an array of symbols.
 
 @method generate
 @param symbols {Array} A statistically-relevant set of symbols
+@return {Object} A tree
 **/
 var generate = exports.generate = function (symbols) {
     var frequency = calculateFrequency(symbols),
@@ -44,10 +46,7 @@ var generate = exports.generate = function (symbols) {
         nodes.sort(sortNodes);
     }
 
-    encodeSymbol(node, []);
-
-    // Print the output to stdio.
-    console.log(node);
+    return encodeSymbol(nodes[0], []);
 };
 
 /**
@@ -180,6 +179,7 @@ initialize using an existing Huffman tree.
 @param node {Object} Tree node
 @param bits {Array} The currently traversed path (`0` for left child, and `1` for
     right child)
+@return {Object} The encoded tree
 **/
 function encodeSymbol (node, bits) {
     if (node.symbol) {
@@ -201,6 +201,8 @@ function encodeSymbol (node, bits) {
     bits && bits.push(1);
     encodeSymbol(node.right, bits);
     bits && bits.pop();
+
+    return node;
 }
 
 /**
