@@ -1,14 +1,36 @@
 var symbolFor = {},
     codeFor   = {};
 
-exports.init = function (symbols) {
+/**
+Initialize using either an array of symbols that should be converted into a
+Huffman tree, or an existing Huffman tree with non-leaf nodes with `left`, and
+`right` properties, and leaf nodes with `symbol`, and `code` properties.
+
+@method initialize
+@param {Array|Object} Either an array of symbols or a Huffman tree
+**/
+exports.initialize = function (o) {
+    if (Array.isArray(o)) {
+        generate(o);
+    }
+    else if (typeof o === 'object' && o !== null) {
+        encodeSymbol(o);
+    }
+};
+
+/**
+Generates a Huffman tree given an array of symbols.
+
+@method generate
+@param symbols {Array} A statistically-relevant set of symbols
+**/
+var generate = exports.generate = function (symbols) {
     var frequency = calculateFrequency(symbols),
         nodes = [],
         combined;
 
     Object.keys(frequency).forEach(function (symbol) {
         nodes.push({
-            type: 'leaf',
             symbol: symbol,
             weight: frequency[symbol]
         });
@@ -23,22 +45,44 @@ exports.init = function (symbols) {
     }
 
     encodeSymbol(node, []);
+
+    // Print the output to stdio.
+    console.log(node);
 };
 
+/**
+Encodes symbols into binary.
+
+@method encode
+@param symbols {Array} Symbols to encode
+@return {String} Binary encoding
+**/
 var encode = exports.encode = function (symbols) {
-    var code = '',
-        symbol, len, i;
+    if (codeFor) {
+        var code = '',
+            symbol, len, i;
 
-    for (i = 0, len = symbols.length; i < len; i += 1) {
-        symbol = symbols[i];
-        if (symbol != '') {
-            code += codeFor[symbol];
+        for (i = 0, len = symbols.length; i < len; i += 1) {
+            symbol = symbols[i];
+            if (symbol != '') {
+                code += codeFor[symbol];
+            }
         }
-    }
 
-    return code;
+        return code;
+    }
 };
 
+/**
+Encodes symbols into hex.
+
+Note: Since it's not clear what should be done with any left-over bits, return
+an object with `hex` and `binary` properties.
+
+@method hexEncode
+@param symbols {Array} Symbols to encode
+@return {Object} Hex encoding and binary left-over
+**/
 exports.hexEncode = function (symbols) {
     var binary = encode(symbols),
         hex = '',
@@ -53,10 +97,17 @@ exports.hexEncode = function (symbols) {
 
     return {
         hex: hex,
-        remainder: chunk
+        binary: chunk
     };
 };
 
+/**
+Decodes binary into symbols.
+
+@method decode
+@param symbols {String} Binary to decode
+@return {Array} Decoded symbols
+**/
 var decode = exports.decode = function (binary) {
     var symbols = [],
         code = '',
@@ -74,8 +125,19 @@ var decode = exports.decode = function (binary) {
     return symbols;
 };
 
-exports.hexDecode = function (hex) {
-    var symbols = [],
+/**
+Decodes hex into symbols.
+
+Note: Pass any extra bits as `o.binary` that need to be appended to the binary
+before decoding.
+
+@method hexEncode
+@param symbols {Array} Symbols to encode
+@return {Object} Hex encoding and binary left-over
+**/
+exports.hexDecode = function (o) {
+    var hex = o.hex,
+        symbols = [],
         binary, b, len, i;
 
     for (i = 0, len = hex.length; i < len; i += 1) {
@@ -86,9 +148,16 @@ exports.hexDecode = function (hex) {
         binary += b;
     }
 
-    return decode(binary);
+    return decode(binary + (o.binary || ''));
 };
 
+/**
+Convenience method used to generate a string of zeros.
+
+@method zeros
+@param count {Integer}
+@return {String}
+**/
 function zeros (count) {
     var output = '';
     while (count--) {
@@ -97,9 +166,26 @@ function zeros (count) {
     return output;
 }
 
+// -- Functions used to generate a Huffman tree ------------------------------
+
+/**
+Recursively traverses a Huffman tree and optionally generates a variable-length
+prefix code for each symbol. Caches mappings between codes and symbols, and
+symbols and codes.
+
+The optional `bits` param should be left out if all we want to do is to
+initialize using an existing Huffman tree.
+
+@method encodeSymbol
+@param node {Object} Tree node
+@param bits {Array} The currently traversed path (`0` for left child, and `1` for
+    right child)
+**/
 function encodeSymbol (node, bits) {
-    if (node.leaf) {
-        node.code = bits.join('');
+    if (node.symbol) {
+        if (bits) {
+            node.code = bits.join('');
+        }
 
         // Caching is good.
         codeFor[node.symbol] = node.code;
@@ -108,20 +194,35 @@ function encodeSymbol (node, bits) {
         return;
     }
 
-    bits.push(0);
+    bits && bits.push(0);
     encodeSymbol(node.left, bits);
-    bits.pop();
+    bits && bits.pop();
 
-    bits.push(1);
+    bits && bits.push(1);
     encodeSymbol(node.right, bits);
-    bits.pop();
+    bits && bits.pop();
 }
 
-// Low weights at the end.
+/**
+Sorts an array of nodes such that the nodes with lower weights end up at the
+tail of the list.
+
+@method sortNodes
+@param a {Object} Tree node
+@param b {Object} Tree node
+**/
 function sortNodes (a, b) {
     return b.weight - a.weight;
 }
 
+/**
+Used to combine nodes while building the Huffman tree.
+
+@method combineNodes
+@param a {Object} Tree node
+@param b {Object} Tree node
+@return {Object} Tree node
+**/
 function combineNodes (a, b) {
     return {
         left: a,
@@ -130,6 +231,17 @@ function combineNodes (a, b) {
     };
 }
 
+/**
+Given an array of symbols that represents a statictically-relevant sample of
+what needs to be encoded, this simple method will keep track of the frequency
+that each symbol appears.
+
+TODO: Use streams to support large inputs.
+
+@method calculateFrequency
+@param {Array} symbols An array of symbols
+@return {Object} A frequency map
+**/
 function calculateFrequency (symbols) {
     var frequency = {};
     symbols.forEach(function (symbol) {
