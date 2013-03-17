@@ -122,6 +122,11 @@ var decode = exports.decode = function (binary) {
         }
     }
 
+    if (code) {
+        console.error('Failed to decode due to left-over bits: ' + code);
+        throw new Error('Failed to decode.');
+    }
+
     return symbols;
 };
 
